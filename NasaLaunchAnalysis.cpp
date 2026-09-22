@@ -5,6 +5,8 @@
 #include <string> // yeah, strings
 #include <unordered_map> // for the weights HashMap
 #include <cstdlib> // for srand() and rand()
+#include <cassert>
+#include "TimeCode.h" // for TimeCode class
 
 using namespace std;
 
@@ -47,7 +49,7 @@ vector<string> split(string line, string delim){
 	return ans;
 }
 
-vector<string> get_words_from_file(char* filename){
+vector<string> get_lines_from_file(string filename){
 
     ifstream text_file;
     text_file.open(filename);
@@ -56,32 +58,60 @@ vector<string> get_words_from_file(char* filename){
         exit(1);
     }
 
-    vector<string> words;
+    vector<string> lines;
     string line;
     while(getline(text_file, line)){
-        vector<string> new_words = split(line, " ");
-        //cout << "new words: " << vec_to_string(new_words) << endl;
-        words.insert(words.end(), new_words.begin(), new_words.end());
-        words.push_back("\n");
-        //cout << new_words.size() << " words added..." << endl;
+        lines.push_back(line);
+        
     }
-
-
-    return words;
-
+    return lines;
+}
+bool has_time(string str) { // helper, check if line (string) has a TimeCode in it
+    return !((split(str, ":")).size() == 1);
+}
+TimeCode parse_line(string str) { //takes a line from the file (a string). Returns the TimeCode object for the time embedded in that line.
+    TimeCode tc;
+    return tc;
 }
 
-int main(int argc, char *argv[]){
-
-    if(argc == 1){
-        std::cout << "Please provide text file name" << std::endl;
-        std::cout << "Example: ./Space_Corrected.csv" << std::endl;
-        return 1;
+vector<TimeCode> get_times(const vector<string>& lines) { // pass by ref to avoid copying 4k lines
+    vector<TimeCode> times;
+    for (size_t i = 1; i < lines.size(); i++) {
+        string curr_line = lines.at(i);
+        if (has_time(curr_line)) {
+            vector<string> parts = split(curr_line, ":");
+            string hours = parts.at(0).substr(parts.at(0).size() - 2, 2);
+            string minutes = parts.at(1).substr(0, 2);
+            TimeCode tc;
+            tc.SetHours(stoi(hours));
+            tc.SetMinutes(stoi(minutes));
+            /**string s_hours = split(curr_line, ":").at(0).substr(curr_line.size() - 2, 2);
+            string s_minutes = split(curr_line, ":").at(1).substr(0, 2);
+            int i_hours = stoi(s_hours);
+            int i_minutes = stoi(s_minutes);
+            TimeCode tc;
+            tc.SetHours(i_hours);
+            tc.SetMinutes(i_minutes);
+            **/
+            times.push_back(tc);
+        }
     }
+    return times;
+}
 
-    if(argc != 2){
-        std::cout << "Incorrect usage!" << std::endl;
-        std::cout << "Example: ./Space_Corrected.csv" << std::endl;
-        return 1;
-    }
+int main(){
+    vector<string> lines = get_lines_from_file("Space_Corrected.csv");
+    assert(lines.size() == 4325);
+    cout << "# lines: " << lines.size() << endl;
+    string test = lines.at(1);
+    cout << test << endl;
+    //We want the 2 characters left of the colon (hours) and the two right of the colon (minutes)
+    vector<string> parts = split(test, ":");
+    string hours = parts.at(0).substr(parts.at(0).size() - 2, 2);
+    string minutes = parts.at(1).substr(0, 2);
+    cout << hours + ":" + minutes << endl;
+
+    vector<TimeCode> times = get_times(lines);
+    cout << times.size() << endl;
+    return 0;
 }
