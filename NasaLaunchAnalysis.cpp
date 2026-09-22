@@ -1,30 +1,18 @@
-//reads the data from this Space_Corrected.csv, extracts the time of day (UTC values), computes the average, and prints it out.
+// Author: Teague Wright
+// CS-222 HW2 Part 2, Task 1: NASA Launch Analysis
+// Reads Space_Corrected.csv, extracts the time of day (UTC) from each launch,
+// and prints the number of data points and the average launch time.
+// I read the assignment notes (note #3).
+// Help: I used Claude (Anthropic's AI assistant) to review this code and explain C++ concepts.
+// The split() helper below was provided by Prof. Novak in an in-class Markov chain activity.
 #include <iostream> // provides cout and probably other stuff
 #include <fstream> // provides file I/O like ifstream and getline()
 #include <vector> // allows use of vector<>
 #include <string> // yeah, strings
-#include <unordered_map> // for the weights HashMap
-#include <cstdlib> // for srand() and rand()
-#include <cassert>
+#include <cassert> // assert() for the sanity check on the line count
 #include "TimeCode.h" // for TimeCode class
 
 using namespace std;
-
-string vec_to_string(vector<string> v) {
-    string str("[");
-    if (v.size() == 0) {
-        return "[]";
-    }
-    for (size_t i = 0; i < v.size(); i++) {
- 
-        str += v.at(i);
-        if (i != v.size() - 1) {
-            str += ", ";
-        }
-    }
-    str += "]";
-    return str;
-}
 
 vector<string> split(string line, string delim){
     // C++ has no split function so I had to make one!
@@ -66,34 +54,28 @@ vector<string> get_lines_from_file(string filename){
     }
     return lines;
 }
+// A line with a launch time looks like: ..."Fri Aug 07, 2020 05:12 UTC"...
+// Lines with only a date have no colon at all, so splitting on ":" gives one piece.
 bool has_time(string str) { // helper, check if line (string) has a TimeCode in it
     return !((split(str, ":")).size() == 1);
 }
-TimeCode parse_line(string str) { //takes a line from the file (a string). Returns the TimeCode object for the time embedded in that line.
-    TimeCode tc;
-    return tc;
+
+// Takes a line from the file (a string). Returns the TimeCode for the time embedded in it.
+// The hours are the 2 characters before the colon and the minutes are the 2 after it;
+// the CSV has no seconds, so those are always 0.
+TimeCode parse_line(string str) {
+    vector<string> parts = split(str, ":");
+    string hours = parts.at(0).substr(parts.at(0).size() - 2, 2);
+    string minutes = parts.at(1).substr(0, 2);
+    return TimeCode(stoi(hours), stoi(minutes), 0);
 }
 
 vector<TimeCode> get_times(const vector<string>& lines) { // pass by ref to avoid copying 4k lines
     vector<TimeCode> times;
-    for (size_t i = 1; i < lines.size(); i++) {
+    for (size_t i = 1; i < lines.size(); i++) { // start at 1 to skip the header row
         string curr_line = lines.at(i);
-        if (has_time(curr_line)) {
-            vector<string> parts = split(curr_line, ":");
-            string hours = parts.at(0).substr(parts.at(0).size() - 2, 2);
-            string minutes = parts.at(1).substr(0, 2);
-            TimeCode tc;
-            tc.SetHours(stoi(hours));
-            tc.SetMinutes(stoi(minutes));
-            /**string s_hours = split(curr_line, ":").at(0).substr(curr_line.size() - 2, 2);
-            string s_minutes = split(curr_line, ":").at(1).substr(0, 2);
-            int i_hours = stoi(s_hours);
-            int i_minutes = stoi(s_minutes);
-            TimeCode tc;
-            tc.SetHours(i_hours);
-            tc.SetMinutes(i_minutes);
-            **/
-            times.push_back(tc);
+        if (has_time(curr_line)) { // launches with only a date are ignored completely
+            times.push_back(parse_line(curr_line));
         }
     }
     return times;
@@ -101,17 +83,20 @@ vector<TimeCode> get_times(const vector<string>& lines) { // pass by ref to avoi
 
 int main(){
     vector<string> lines = get_lines_from_file("Space_Corrected.csv");
-    assert(lines.size() == 4325);
-    cout << "# lines: " << lines.size() << endl;
-    string test = lines.at(1);
-    cout << test << endl;
-    //We want the 2 characters left of the colon (hours) and the two right of the colon (minutes)
-    vector<string> parts = split(test, ":");
-    string hours = parts.at(0).substr(parts.at(0).size() - 2, 2);
-    string minutes = parts.at(1).substr(0, 2);
-    cout << hours + ":" + minutes << endl;
+    assert(lines.size() == 4325); // sanity check: the whole file was read, header included
 
     vector<TimeCode> times = get_times(lines);
-    cout << times.size() << endl;
+    cout << times.size() << " data points. " << endl;
+
+    // The average is the total of every launch time divided by how many there are.
+    // Using TimeCode's own + and / keeps the arithmetic inside the class (as the spec requires)
+    // and means the result is already a TimeCode, so ToString() formats it as h:m:s.
+    TimeCode sum;
+    for (TimeCode tc : times) {
+        sum = sum + tc;
+    }
+    sum = sum / times.size();
+    cout << "AVERAGE: " + sum.ToString() << endl;
+
     return 0;
 }
