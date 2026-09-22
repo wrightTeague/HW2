@@ -1,3 +1,13 @@
+# Compiled executables built by the Makefile
 tct
-tct.dSYM/
+nasa
+pdt
+
+# Debug symbol bundles that g++ -g leaves behind on macOS
+*.dSYM/
+
+# macOS Finder metadata
 .DS_Store
+
+# Assignment PDFs - kept locally for reference, not part of the submission
+spec/
