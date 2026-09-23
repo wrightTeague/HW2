@@ -26,26 +26,25 @@ struct DryingSnapShot {
 
 
 long long int get_time_remaining(DryingSnapShot dss){
-	// Replace with your code
-	return 0;
+	return static_cast<long long int>(dss.timeToDry->GetTimeCodeAsSeconds()) - (time(0) - dss.startTime);
 }
 
 
 string drying_snap_shot_to_string(DryingSnapShot dss){
-	// Replace with your code
-	return "";
+	string s = "";
+	
+	return s;
 }
 
 
 double get_sphere_sa(double rad){
-	// replace with your code
-	return 0;
+	return 4 * M_PI * rad * rad;
 }
 
 
 TimeCode *compute_time_code(double surfaceArea){
-	// replace with your code
-	return nullptr;
+	TimeCode *tc = new TimeCode(0, 0, static_cast<unsigned long long int>(surfaceArea));
+	return tc;
 }
 
 
@@ -83,6 +82,7 @@ void tests(){
 
 int main(){
 	// replace with your code
-	//tests());
+	tests();
+
 	return 0;
 }
