@@ -3,11 +3,9 @@
 
 // Author: Teague Wright
 // CS-222 HW2 Part 2, Task 2: Paint Dry Timer
-// Tracks batches of spheres drying, where a batch takes one second per square
-// centimetre of surface area. Times are stored as heap-allocated TimeCodes and
-// deleted once a batch finishes or the user quits, so the program has no leaks.
+// Times batches of drying spheres: one second per square centimetre of surface area.
 // I read the assignment notes (note #3).
-// Help: I used Claude (Anthropic's AI assistant) to review this code and explain C++ concepts.
+// Help: Claude (Anthropic's AI assistant) reviewed this code and explained C++ concepts.
 
 #include <ctime> // for time(0)
 #include <iostream> // for cin and cout
@@ -33,19 +31,15 @@ struct DryingSnapShot {
 };
 
 
-// Seconds left before this batch is dry: its total drying time minus how long it has
-// been sitting. The total is cast to a signed type first, because subtracting from an
-// unsigned value would wrap a finished batch around to a huge positive number instead
-// of going negative. Negative is meaningful here: it means the batch is done.
+// Cast to signed first: subtracting from an unsigned value would wrap a finished
+// batch to a huge positive number instead of going negative (negative means done).
 long long int get_time_remaining(DryingSnapShot dss){
 	return static_cast<long long int>(dss.timeToDry->GetTimeCodeAsSeconds()) - (time(0) - dss.startTime);
 }
 
 
-// Builds the display line for one batch. Both forms share the same prefix and differ
-// only at the end: a finished batch says DONE! instead of a remaining time. The TimeCode
-// is only built inside the positive branch, since a negative count would wrap when
-// converted to TimeCode's unsigned seconds.
+// The TimeCode is built only in the positive branch, since a negative count would
+// wrap when converted to TimeCode's unsigned seconds.
 string drying_snap_shot_to_string(DryingSnapShot dss){
 	string s = "	" + dss.name + " (takes " + dss.timeToDry->ToString() + " to dry) ";
 	long long int timeRemaining = get_time_remaining(dss);
@@ -57,16 +51,13 @@ string drying_snap_shot_to_string(DryingSnapShot dss){
 }
 
 
-// Surface area of a sphere: 4 * pi * r^2. This value doubles as the batch's drying
-// time in seconds, which is why the timer needs no other unit conversion.
+// Surface area doubles as the drying time in seconds, so no unit conversion is needed.
 double get_sphere_sa(double rad){
 	return 4 * M_PI * rad * rad;
 }
 
 
-// One second of drying per square centimetre. Allocated with new because each batch's
-// TimeCode has to outlive this function; the caller owns it and must delete it.
-// The cast to a whole number of seconds drops any fraction of a second.
+// new, because each batch's TimeCode outlives this function: the caller must delete it.
 TimeCode *compute_time_code(double surfaceArea){
 	TimeCode *tc = new TimeCode(0, 0, static_cast<unsigned long long int>(surfaceArea));
 	return tc;
@@ -108,8 +99,8 @@ void tests(){
 int main(){
 	tests();
 
-	// Every batch currently drying. Each holds a TimeCode on the heap, so a batch must
-	// have its timeToDry deleted before it leaves this vector (or before the program ends).
+	// Each batch holds a TimeCode on the heap, so its timeToDry must be deleted
+	// before the batch leaves this vector (or before the program ends).
 	vector<DryingSnapShot> tracker;
 
 	while (true) {
@@ -131,16 +122,14 @@ int main(){
 			cout << drying_snap_shot_to_string(dss) << endl;
 		}
 		else if (choice == 'v' || choice == 'V') {
-			// Show every batch, including any that just finished: a finished batch prints
-			// DONE! once and is only removed afterwards, which is why the count below is
-			// taken before the clean-up pass.
+			// A finished batch prints DONE! once and is removed afterwards, so the
+			// count below is taken before the clean-up pass.
 			for (size_t i = 0; i < tracker.size(); i++) {
 				cout << drying_snap_shot_to_string(tracker.at(i)) << endl;
 			}
 			cout << "\t" << tracker.size() << " batches being tracked." << endl;
 
-			// Free finished batches. Looping backwards means erasing an element can't shift
-			// an element we have not checked yet into a position we already passed.
+			// Backwards, so erasing can't shift an unchecked element past the cursor.
 			for (size_t i = tracker.size(); i > 0; i--) {
 				size_t index = i - 1;
 				if (get_time_remaining(tracker.at(index)) <= 0) {
@@ -157,8 +146,7 @@ int main(){
 		}
 	}
 
-	// Batches still drying at quit time still own a TimeCode, so free them here.
-	// Without this, quitting with batches left would leak one TimeCode each.
+	// Batches still drying at quit time still own a TimeCode; without this they leak.
 	for (size_t i = 0; i < tracker.size(); i++) {
 		delete tracker.at(i).timeToDry;
 	}

@@ -1,10 +1,9 @@
 // Author: Teague Wright
 // CS-222 HW2 Part 2, Task 1: NASA Launch Analysis
-// Reads Space_Corrected.csv, extracts the time of day (UTC) from each launch,
-// and prints the number of data points and the average launch time.
+// Reads Space_Corrected.csv and prints the average time of day of every launch.
 // I read the assignment notes (note #3).
-// Help: I used Claude (Anthropic's AI assistant) to review this code and explain C++ concepts.
-// The split() helper below was provided by Prof. Novak in an in-class Markov chain activity.
+// Help: Claude (Anthropic's AI assistant) reviewed this code and explained C++ concepts.
+// split() below was provided by Prof. Novak in an in-class Markov chain activity.
 #include <iostream> // provides cout and probably other stuff
 #include <fstream> // provides file I/O like ifstream and getline()
 #include <vector> // allows use of vector<>
@@ -54,15 +53,14 @@ vector<string> get_lines_from_file(string filename){
     }
     return lines;
 }
-// A line with a launch time looks like: ..."Fri Aug 07, 2020 05:12 UTC"...
-// Lines with only a date have no colon at all, so splitting on ":" gives one piece.
+// Launch times look like "Fri Aug 07, 2020 05:12 UTC"; date-only lines have no colon,
+// so splitting on ":" gives a single piece.
 bool has_time(string str) { // helper, check if line (string) has a TimeCode in it
     return !((split(str, ":")).size() == 1);
 }
 
-// Takes a line from the file (a string). Returns the TimeCode for the time embedded in it.
-// The hours are the 2 characters before the colon and the minutes are the 2 after it;
-// the CSV has no seconds, so those are always 0.
+// Hours are the 2 characters before the colon, minutes the 2 after.
+// The CSV has no seconds, so those are always 0.
 TimeCode parse_line(string str) {
     vector<string> parts = split(str, ":");
     string hours = parts.at(0).substr(parts.at(0).size() - 2, 2);
@@ -88,9 +86,8 @@ int main(){
     vector<TimeCode> times = get_times(lines);
     cout << times.size() << " data points. " << endl;
 
-    // The average is the total of every launch time divided by how many there are.
-    // Using TimeCode's own + and / keeps the arithmetic inside the class (as the spec requires)
-    // and means the result is already a TimeCode, so ToString() formats it as h:m:s.
+    // TimeCode's own + and / keep the arithmetic inside the class (as the spec requires),
+    // and the result is already a TimeCode, so ToString() formats it as h:m:s.
     TimeCode sum;
     for (TimeCode tc : times) {
         sum = sum + tc;

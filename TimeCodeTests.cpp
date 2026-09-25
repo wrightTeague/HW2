@@ -1,7 +1,6 @@
 // Author: Teague Wright
 // CS-222 HW2: tests for TimeCode
-// Help: I used Claude (Anthropic's AI assistant) to review these tests and help write/comment some of them.
-// Each test prints its name, then asserts; a failed assert stops the program so the failing test is easy to spot.
+// Help: Claude (Anthropic's AI assistant) reviewed these tests and helped write some of them.
 
 #include <iostream>
 #include <assert.h>
@@ -10,7 +9,7 @@ using namespace std;
 #include "TimeCode.h"
 
 
-// ComponentsToSeconds is the core conversion, so it runs first: most other tests depend on it.
+// The core conversion, so it runs first: most other tests depend on it.
 void TestComponentsToSeconds(){
 	cout << "Testing ComponentsToSeconds" << endl;
 	
@@ -24,7 +23,6 @@ void TestComponentsToSeconds(){
 }
 
 
-// With no arguments, every default is 0, so the time should be 0:0:0.
 void TestDefaultConstructor(){
 	cout << "Testing Default Constructor" << endl;
 	TimeCode tc;
@@ -37,7 +35,7 @@ void TestDefaultConstructor(){
 }
 
 
-// The constructor must accept out-of-range minutes/seconds and roll them over into a valid time.
+// The constructor must roll out-of-range minutes/seconds over into a valid time.
 void TestComponentConstructor(){
 	cout << "Testing Component Constructor" << endl;
 	TimeCode tc = TimeCode(0, 0, 0);
@@ -58,7 +56,6 @@ void TestComponentConstructor(){
 }
 
 
-// GetComponents fills in the caller's variables through references, so check all three after the call.
 void TestGetComponents(){
 	cout << "Testing GetComponents" << endl;
 	
@@ -77,7 +74,7 @@ void TestGetComponents(){
 }
 
 
-// Subtraction must borrow across parts correctly and throw instead of going negative.
+// Subtraction must borrow correctly and throw instead of going negative.
 void TestSubtract(){
 	cout << "Testing Subtract" << endl;
 	TimeCode tc1 = TimeCode(1, 0, 0);
@@ -127,7 +124,7 @@ void TestSubtract(){
 	
 	cout << "PASSED!" << endl << endl;
 }
-// Addition is easy until parts roll over, so most of these cases target roll-over.
+// Most of these cases target roll-over, which is where addition gets tricky.
 void TestAdd(){
 	cout << "Testing Addition" << endl;
 	TimeCode tc1 = TimeCode(1, 0, 3);
@@ -160,7 +157,7 @@ void TestAdd(){
 }
 
 
-// Setters change one part only and throw on out-of-range values instead of rolling over.
+// Setters change one part only, and throw instead of rolling over.
 void TestSetMinutes()
 {
 	cout << "Testing SetMinutes" << endl;
@@ -205,7 +202,6 @@ void TestSetMinutes()
 }
 
 
-// A copy must start equal to the original but be a separate object.
 void TestCopyConstructor(){
 	cout << "Testing Copy Constructor" << endl;
 	TimeCode tc1 = TimeCode(1, 0, 3);
@@ -220,7 +216,6 @@ void TestCopyConstructor(){
 }
 
 
-// Hours can be any size, including hours that only exist because of roll-over.
 void TestGetHours(){
 	cout << "Testing GetHours" << endl;
 	TimeCode tc1 = TimeCode(1, 0, 3);
@@ -238,7 +233,6 @@ void TestGetHours(){
 }
 
 
-// Minutes must always come out between 0 and 59, even after roll-over.
 void TestGetMinutes(){
 	cout << "Testing GetMinutes" << endl;
 
@@ -258,7 +252,6 @@ void TestGetMinutes(){
 }
 
 
-// Seconds must always come out between 0 and 59, even for huge inputs.
 void TestGetSeconds(){
 	cout << "Testing GetSeconds" << endl;
 
@@ -279,34 +272,33 @@ void TestGetSeconds(){
 }
 
 
-// SetHours has no invalid values (no limit on hours, unsigned means no negatives).
+// SetHours has no invalid input: no limit on hours, and unsigned rules out negatives.
 void TestSetHours(){
 	cout << "Testing SetHours" << endl;
 
 	TimeCode tc = TimeCode(8, 5, 9);
-	tc.SetHours(3); // only hours should change; minutes and seconds stay 5 and 9
+	tc.SetHours(3); // minutes and seconds must stay 5 and 9
 	assert(tc.ToString() == "3:5:9");
 
-	tc.SetHours(0); // 0 hours is valid
+	tc.SetHours(0);
 	assert(tc.ToString() == "0:5:9");
 
-	tc.SetHours(2000000); // hours have no upper limit, so no roll-over or exception
+	tc.SetHours(2000000); // no upper limit on hours
 	assert(tc.ToString() == "2000000:5:9");
 
 	cout << "PASSED!" << endl << endl;
 }
 
 
-// Same rules as SetMinutes: 0-59 are valid, 60 must throw and leave the time unchanged.
 void TestSetSeconds(){
 	cout << "Testing SetSeconds" << endl;
 
 	TimeCode tc = TimeCode(8, 5, 9);
-	tc.SetSeconds(15); // test valid change
+	tc.SetSeconds(15);
 	assert(tc.ToString() == "8:5:15");
-	tc.SetSeconds(0); // test valid change
+	tc.SetSeconds(0);
 	assert(tc.ToString() == "8:5:0");
-	tc.SetSeconds(59); // test valid change
+	tc.SetSeconds(59);
 	assert(tc.ToString() == "8:5:59");
 	try
 	{
@@ -324,20 +316,18 @@ void TestSetSeconds(){
 }
 
 
-// reset() should always give 0:0:0, even if the time is already zero.
 void TestReset(){
 	cout << "Testing Reset" << endl;
 	TimeCode tc = TimeCode(8, 5, 9);
 	tc.reset();
 	assert(tc.ToString() == "0:0:0");
-	tc.reset(); // resetting twice should be harmless
+	tc.reset();
 	assert(tc.ToString() == "0:0:0");
 
 	cout << "PASSED!" << endl << endl;
 }
 
 
-// Multiplying by a number scales the time; negative numbers must throw.
 void TestMultiply(){
 	cout << "Testing Multiply" << endl;
 	TimeCode tc = TimeCode(1, 0, 0);
@@ -347,13 +337,13 @@ void TestMultiply(){
 	assert(tc3.ToString() == "0:30:0");
 	TimeCode tc4 = tc * 1;
 	assert(tc4.ToString() == "1:0:0");
-	TimeCode tc5 = tc * 0; // 0 is allowed, only negatives are not
+	TimeCode tc5 = tc * 0;
 	assert(tc5.ToString() == "0:0:0");
 	assert(tc.ToString() == "1:0:0"); // original is unchanged
 
 	try 
 	{ 
-		TimeCode tc6 = tc * -1; // a TimeCode can't be negative
+		TimeCode tc6 = tc * -1;
 		assert(false);
 	}
 	catch (const invalid_argument &e) {}
@@ -363,7 +353,6 @@ void TestMultiply(){
 }
 
 
-// Dividing by a number scales the time down; negatives and zero must throw.
 void TestDivide(){
 	cout << "Testing Divide" << endl;
 	TimeCode tc = TimeCode(1, 0, 0);
@@ -377,14 +366,14 @@ void TestDivide(){
 
 	try
 	{
-		TimeCode tc5 = tc / -1; // a TimeCode can't be negative
+		TimeCode tc5 = tc / -1;
 		assert(false);
 	}
 	catch (const invalid_argument &e) {}
 
 	try
 	{
-		TimeCode tc6 = tc / 0; // no answer for dividing by zero
+		TimeCode tc6 = tc / 0;
 		assert(false);
 	}
 	catch (const invalid_argument &e) {}
@@ -419,7 +408,6 @@ void TestEquality(){
 }
 
 
-// Ordering compares total time, so hours outweigh minutes, which outweigh seconds.
 void TestLessGreater(){
 	cout << "Testing <, <=, >, >=" << endl;
 	TimeCode small = TimeCode(1, 0, 0);
@@ -458,7 +446,6 @@ void TestLessGreater(){
 
 
 	
-// Runs every test in order. If an assert fails, the program stops at that test.
 int main(){
 	
 	TestComponentsToSeconds();
